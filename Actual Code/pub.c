@@ -39,6 +39,7 @@ char* device1(){
 
 	char* json_to_string = (char *)json_object_to_json_string(jobj);
 	//size_t i = strlen(json_to_string);
+
 	printf("%s\n",json_to_string);
 	return json_to_string;
 }
@@ -63,6 +64,7 @@ char* device2(){
     json_object_object_add(jobj, "Switch State", json_object_new_string(switch_state));
 
 	char* json_to_string = (char *)json_object_to_json_string(jobj);
+
 	printf("%s\n",json_to_string);
 	return json_to_string;
 }
@@ -121,17 +123,22 @@ void* device2_mosquitto(void * arg){
 
 int main(){
     pthread_t thread_id[50];
+    while(1){
     for(int i=0;i<50;i++){
+
             if(i<30){
-                sleep(0.5);
+                usleep(500000);
                 pthread_create(&thread_id[i], NULL, device1_mosquitto, NULL);
             }else{
-                sleep(0.5);
+                usleep(500000);
                 pthread_create(&thread_id[i], NULL, device2_mosquitto, NULL);
             }
     }
     for(int i=0;i<50;i++){
+        //delay(1);
         pthread_join(thread_id[i], NULL);
+    }
     }
     return 0;
 }
+
