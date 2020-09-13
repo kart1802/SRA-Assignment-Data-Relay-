@@ -6,6 +6,37 @@
 #include<math.h>
 #include <json-c/json.h>
 #include <mosquitto.h>
+#define MAX_RLEN 50
+
+char* encode(const char* src)
+{
+    int rLen;
+    char count[MAX_RLEN];
+    int len = strlen(src);
+
+    char* dest = (char*)malloc(sizeof(char) * (len * 2 + 1));
+
+    int i, j = 0, k;
+
+    for (i = 0; i < len; i++) {
+
+        dest[j++] = src[i];
+
+        rLen = 1;
+        while (i + 1 < len && src[i] == src[i + 1]) {
+            rLen++;
+            i++;
+        }
+
+        sprintf(count, "%d", rLen);
+
+        for (k = 0; *(count + k); k++, j++) {
+            dest[j] = count[k];
+        }
+    }
+    dest[j] = '\0';
+    return dest;
+}
 
 void writing_in_file(const char* values, char* name){
     FILE *fp;
@@ -35,10 +66,10 @@ void writing_in_file2(int values, char* name){
 void parsed_data(char* message){
     struct json_object *parsed_json, *temp, *humidity, *pH, *air_pressure, *timestamp, *device_id, *distance, *switch_state;
     parsed_json = json_tokener_parse(message);
-    printf("%s\n", json_object_to_json_string_ext(parsed_json, JSON_C_TO_STRING_SPACED | JSON_C_TO_STRING_PRETTY));
+    //printf("%s\n", json_object_to_json_string_ext(parsed_json, JSON_C_TO_STRING_SPACED | JSON_C_TO_STRING_PRETTY));
     json_object_object_get_ex(parsed_json, "Device Id", &device_id);
     const char *id = json_object_get_string(device_id);
-    printf("%s\n",id);
+    //printf("%s\n",id);
     json_object_object_get_ex(parsed_json, "Timestamp", &timestamp);
     const char *cur_time = json_object_get_string(timestamp);
     //printf("%s",cur_time);
@@ -55,6 +86,13 @@ void parsed_data(char* message){
         writing_in_file(Humidity,"device1/humidity.txt");
         writing_in_file2(ap,"device1/air_pressure.txt");
         writing_in_file(ph,"device1/ph.txt");
+        const char* t = encode(temperature);
+        const char* h = encode(Humidity);
+        const char* p = encode(ph);
+        //char* res = encode(str);
+        writing_in_file(t,"device1/ctemperature.txt");
+        writing_in_file(h,"device1/chumidity.txt");
+        writing_in_file(p,"device1/cph.txt");
     }else{
         json_object_object_get_ex(parsed_json, "Distance", &distance);
         const char*dist = json_object_get_string(distance);
@@ -62,6 +100,10 @@ void parsed_data(char* message){
         const char *ss = json_object_get_string(switch_state);
         writing_in_file(dist,"device2/distance.txt");
         writing_in_file(ss,"device2/switch_state.txt");
+        const char* d = encode(dist);
+        const char* s = encode(ss);
+        writing_in_file(d,"device2/cdistance.txt");
+        writing_in_file(s,"device2/cswitch_state.txt");
     }
 
 
